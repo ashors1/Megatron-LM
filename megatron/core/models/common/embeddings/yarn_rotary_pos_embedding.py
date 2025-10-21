@@ -31,6 +31,7 @@ def _yarn_rope_forward(
     max_seq_len: int,
     offset: int = 0,
     packed_seq: bool = False,
+    correction_range_round_to_int: bool = True
 ):
     if inv_freq_extra.device.type == 'cpu':
         # move `inv_freq_extra` to GPU once at the first micro-batch forward pass
@@ -45,6 +46,7 @@ def _yarn_rope_forward(
         dim,
         rotary_base,
         original_max_position_embeddings,
+        correction_range_round_to_int
     )
     inv_freq_mask = 1.0 - _yarn_linear_ramp_mask(low, high, dim // 2).to(
         device=inv_freq_extra.device, dtype=torch.float32
@@ -174,7 +176,7 @@ class YarnRotaryEmbedding(RotaryEmbedding):
             max_seq_len,
             offset,
             packed_seq,
-            correction_range_round_to_int=self.correction_range_round_to_int,
+            self.correction_range_round_to_int,
         )
         if self.cp_group is not None and self.cp_group.size() > 1 and not packed_seq:
             # slice rotary_pos_emb along sequence dimension
